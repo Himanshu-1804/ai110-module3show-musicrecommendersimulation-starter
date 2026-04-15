@@ -99,11 +99,11 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     Applies a two-part scoring algorithm:
 
     Categorical matches (exact):
-        genre match  → +2.0 points
+        genre match  → +1.0 points
         mood match   → +1.5 points
 
     Numeric proximity (weighted, each clamped to [0, 1]):
-        energy       → weight 1.00  (highest priority)
+        energy       → weight 2.00  (highest priority)
         valence      → weight 0.75
         tempo_bpm    → weight 0.50  (normalized over a 100 BPM window)
         danceability → weight 0.50
@@ -130,8 +130,8 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 
     # --- Categorical matches ---
     if user_prefs.get("genre") and song["genre"] == user_prefs["genre"]:
-        score += 2.0
-        reasons.append(f"Genre match ({song['genre']}): +2.0")
+        score += 1.0
+        reasons.append(f"Genre match ({song['genre']}): +1.0")
 
     if user_prefs.get("mood") and song["mood"] == user_prefs["mood"]:
         score += 1.5
@@ -145,7 +145,7 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 
     if "energy" in user_prefs:
         proximity = max(0.0, min(1.0, 1.0 - abs(user_prefs["energy"] - song["energy"])))
-        points = round(proximity * 1.00, 2)
+        points = round(proximity * 2.00, 2)
         score += points
         reasons.append(f"Energy proximity: +{points:.2f}")
 
