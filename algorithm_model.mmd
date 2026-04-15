@@ -1,0 +1,66 @@
+flowchart TD
+
+    subgraph INPUT["INPUT — User Preferences"]
+        A["genre · mood · energy\nvalence · BPM · danceability · acousticness"]
+    end
+
+    subgraph SOURCE["DATA SOURCE"]
+        B["songs.csv\n18 songs"]
+    end
+
+    subgraph PROCESS["PROCESS — Score Each Song"]
+        C["Pick Next Song from CSV"]
+        D["score = 0"]
+
+        E{"song.genre ==\nuser.genre?"}
+        F["score += 2.0"]
+        G["score += 0.0"]
+
+        H{"song.mood ==\nuser.mood?"}
+        I["score += 1.5"]
+        J["score += 0.0"]
+
+        K["Energy Proximity\nscore += 1.00 * (1 - abs(user.energy - song.energy))"]
+        L["Valence Proximity\nscore += 0.75 * (1 - abs(user.valence - song.valence))"]
+        M["BPM Proximity\nscore += 0.50 * clamp(1 - abs(user.bpm - song.bpm) / 100)"]
+        N["Danceability Proximity\nscore += 0.50 * (1 - abs(user.danceability - song.danceability))"]
+        O["Acousticness Proximity\nscore += 0.25 * (1 - abs(user.acousticness - song.acousticness))"]
+
+        P["Store (song, final_score)\nMax possible score = 6.5"]
+
+        Q{"More songs\nremaining in CSV?"}
+    end
+
+    subgraph OUTPUT["OUTPUT — Ranked Recommendations"]
+        R["Sort all stored songs\nby score — descending"]
+        S["Slice Top K songs"]
+        T["Ranked Recommendation List"]
+    end
+
+    A --> C
+    B --> C
+    C --> D
+    D --> E
+
+    E -- "Yes" --> F
+    E -- "No"  --> G
+    F --> H
+    G --> H
+
+    H -- "Yes" --> I
+    H -- "No"  --> J
+    I --> K
+    J --> K
+
+    K --> L
+    L --> M
+    M --> N
+    N --> O
+    O --> P
+
+    P --> Q
+    Q -- "Yes, loop back" --> C
+    Q -- "No"             --> R
+
+    R --> S
+    S --> T

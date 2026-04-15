@@ -19,15 +19,44 @@ Replace this paragraph with your own summary of what your version does.
 
 Explain your design in plain language.
 
-Some prompts to answer:
+**What features does each `Song` use?**
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+- `genre` — categorical label (e.g. lofi, pop, metal)
+- `mood` — categorical label (e.g. chill, happy, intense)
+- `energy` — float 0–1, how energetic the track feels
+- `valence` — float 0–1, musical positivity
+- `tempo_bpm` — integer, beats per minute
+- `danceability` — float 0–1, how suitable for dancing
+- `acousticness` — float 0–1, acoustic vs. electronic texture
 
-You can include a simple diagram or bullet list if helpful.
+**What information does the `UserProfile` store?**
+
+- A target value for each of the seven features above — the user's ideal song described as a set of numbers and labels
+
+**How does the `Recommender` compute a score for each song?**
+
+- Every song in the catalog is scored independently using two steps:
+  - **Categorical match** — `+2.0` if genre matches, `+1.5` if mood matches
+  - **Numeric proximity** — for each numeric feature, compute `1 - abs(user_target - song_value)` and multiply by a weight:
+    - Energy: weight `1.00` (highest priority)
+    - Valence: weight `0.75`
+    - Tempo BPM: weight `0.50` (normalized over a 100 BPM range)
+    - Danceability: weight `0.50`
+    - Acousticness: weight `0.25` (lowest priority)
+  - Maximum possible score: **6.5 points**
+
+**How are final recommendations chosen?**
+
+- All 18 songs are scored, then sorted by score descending
+- The top K songs are returned as the ranked recommendation list
+
+**Known bias in this recipe:**
+
+- This scoring recipe heavily prioritizes **energy** (weight 1.00) and **mood match** (+1.5 categorical bonus) — together these two features account for the majority of score variation between songs
+- **Tempo, danceability, and acousticness** receive substantially lower weights (0.50, 0.50, 0.25) and contribute little to the final ranking unless all other features are tied
+- As a result, two songs with very different tempos or acoustic textures can score almost identically, while a small difference in energy or a mood mismatch can separate them significantly — the system is effectively a mood-and-energy matcher with minor stylistic nuance
+
+
 
 ---
 
@@ -41,6 +70,8 @@ You can include a simple diagram or bullet list if helpful.
    python -m venv .venv
    source .venv/bin/activate      # Mac or Linux
    .venv\Scripts\activate         # Windows
+
+   ```
 
 2. Install dependencies
 
@@ -101,12 +132,11 @@ Write 1 to 2 paragraphs here about what you learned:
 - about how recommenders turn data into predictions
 - about where bias or unfairness could show up in systems like this
 
-
 ---
 
 ## 7. `model_card_template.md`
 
-Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}  
+Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}
 
 ```markdown
 # 🎧 Model Card - Music Recommender Simulation
@@ -158,6 +188,7 @@ Describe your dataset.
 Where does your recommender work well
 
 You can think about:
+
 - Situations where the top results "felt right"
 - Particular user profiles it served well
 - Simplicity or transparency benefits
@@ -169,6 +200,7 @@ You can think about:
 Where does your recommender struggle
 
 Some prompts:
+
 - Does it ignore some genres or moods
 - Does it treat all users as if they have the same taste shape
 - Is it biased toward high energy or one genre by default
@@ -181,6 +213,7 @@ Some prompts:
 How did you check your system
 
 Examples:
+
 - You tried multiple user profiles and wrote down whether the results matched your expectations
 - You compared your simulation to what a real app like Spotify or YouTube tends to recommend
 - You wrote tests for your scoring logic
@@ -208,4 +241,4 @@ A few sentences about what you learned:
 - What surprised you about how your system behaved
 - How did building this change how you think about real music recommenders
 - Where do you think human judgment still matters, even if the model seems "smart"
-
+```
